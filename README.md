@@ -224,7 +224,21 @@ numbers:
 ssh git.charm.sh soft-serve/cmd/soft/main.go -c -l
 ```
 
-### A note about RSA keys
+## Managing Repos
+The default `.repos` folder is created where you first run `soft`. 
+It will also create a .ssh folder if one does not already exist to house your soft-serve ssh keys.
+We recommend running `soft` in your home directory so it's easy to find your repos folder later. 
+On Linux or Mac: ~/.repos
+On Windows: C:/Users/username/.repos
+
+### Deleting a Repo
+To delete a repo from your soft serve server, you'll have to remove the repo from the .repos directory.
+
+### Renaming a Repo
+To rename a repo's display name in the menu, change its name in the config.yaml file for your soft serve server.
+By default, the display name will be the repository name. 
+
+## A note about RSA keys
 
 Unfortunately, due to a shortcoming in Go’s `x/crypto/ssh` package, Soft Serve
 does not currently support access via new SSH RSA keys: only the old SHA-1
