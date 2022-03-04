@@ -225,11 +225,8 @@ ssh git.charm.sh soft-serve/cmd/soft/main.go -c -l
 ```
 
 ## Managing Repos
-The default `.repos` folder is created where you first run `soft`. 
-It will also create a .ssh folder if one does not already exist to house your soft-serve ssh keys.
-We recommend running `soft` in your home directory so it's easy to find your repos folder later. 
-On Linux or Mac: ~/.repos
-On Windows: C:/Users/username/.repos
+`.repos` and `.ssh` directories are created when you first run `soft` at the paths specified for the `SOFT_SERVE_KEY_PATH` and `SOFT_SERVE_REPO_PATH` environment variables. 
+It's recommended to have a dedicated directory for your soft-serve repos and config.
 
 ### Deleting a Repo
 To delete a repo from your soft serve server, you'll have to remove the repo from the .repos directory.
