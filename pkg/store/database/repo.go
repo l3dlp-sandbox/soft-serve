@@ -92,6 +92,14 @@ func (*repoStore) GetRepoIsMirrorByName(ctx context.Context, tx db.Handler, name
 	return isMirror, db.WrapError(err)
 }
 
+// SetRepoIsMirrorByName implements store.RepositoryStore.
+func (*repoStore) SetRepoIsMirrorByName(ctx context.Context, tx db.Handler, name string, isMirror bool) error {
+	name = utils.SanitizeRepo(name)
+	query := tx.Rebind("UPDATE repos SET mirror = ? WHERE name = ?;")
+	_, err := tx.ExecContext(ctx, query, isMirror, name)
+	return db.WrapError(err)
+}
+
 // GetRepoIsPrivateByName implements store.RepositoryStore.
 func (*repoStore) GetRepoIsPrivateByName(ctx context.Context, tx db.Handler, name string) (bool, error) {
 	var isPrivate bool
