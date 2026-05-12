@@ -22,9 +22,28 @@ cmp stdout info1.txt
 soft repo list
 stdout charmbracelet/wizard-tutorial
 
-# is-mirror?
-soft repo is-mirror charmbracelet/wizard-tutorial
+# create a non-mirror repo
+soft repo create test-normal
+soft repo mirror test-normal
+stdout false
+# try to enable mirror on repo without remote - should fail
+! soft repo mirror test-normal true
+
+# disable mirror
+soft repo mirror charmbracelet/wizard-tutorial false
+soft repo mirror charmbracelet/wizard-tutorial
+stdout false
+# verify git config no longer has mirror
+readfile $DATA_PATH/repos/charmbracelet/wizard-tutorial.git/config
+! stdout 'mirror = true'
+
+# re-enable mirror
+soft repo mirror charmbracelet/wizard-tutorial true
+soft repo mirror charmbracelet/wizard-tutorial
 stdout true
+# verify git config has mirror again
+readfile $DATA_PATH/repos/charmbracelet/wizard-tutorial.git/config
+stdout 'mirror = true'
 
 # set project name
 soft repo project-name charmbracelet/wizard-tutorial wizard-tutorial

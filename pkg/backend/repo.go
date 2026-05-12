@@ -553,6 +553,69 @@ func (d *Backend) SetHidden(ctx context.Context, name string, hidden bool) error
 	}))
 }
 
+// SetMirror sets the mirror flag of a repository.
+// Note: enabling mirror mode requires the repository to have been imported
+// with a remote URL. Use ImportRepository to create a new mirror.
+func (d *Backend) SetMirror(ctx context.Context, name string, mirror bool) error {
+	name = utils.SanitizeRepo(name)
+	rp := filepath.Join(d.repoPath(name))
+
+	// Delete cache
+	d.cache.Delete(name)
+
+	return db.WrapError(d.db.TransactionContext(ctx, func(tx *db.Tx) error {
+		// Update git config
+		r, err := git.Open(rp)
+		if err != nil {
+			return err
+		}
+
+		rcfg, err := r.Config()
+		if err != nil {
+			return err
+		}
+
+		// Update mirror option for all remotes
+		remoteSection := rcfg.Section("remote")
+		hasRemote := false
+		for _, sub := range remoteSection.Subsections {
+			// Check if this remote has a URL
+			for _, opt := range sub.Options {
+				if opt.Key == "url" && opt.Value != "" {
+					hasRemote = true
+					found := false
+					for i, opt := range sub.Options {
+						if opt.Key == "mirror" {
+							found = true
+							if mirror {
+								sub.Options[i].Value = "true"
+							} else {
+								sub.Options = append(sub.Options[:i], sub.Options[i+1:]...)
+							}
+							break
+						}
+					}
+					if !found && mirror {
+						sub.SetOption("mirror", "true")
+					}
+					break
+				}
+			}
+		}
+
+		if mirror && !hasRemote {
+			return errors.New("cannot enable mirror mode: repository has no remote URL configured")
+		}
+
+		if err := r.SetConfig(rcfg); err != nil {
+			d.logger.Error("failed to set repository config", "err", err, "path", rp)
+			return err
+		}
+
+		return d.store.SetRepoIsMirrorByName(ctx, tx, name, mirror)
+	}))
+}
+
 // SetDescription sets the description of a repository.
 //
 // It implements backend.Backend.

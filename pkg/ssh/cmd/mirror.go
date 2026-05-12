@@ -7,21 +7,34 @@ import (
 
 func mirrorCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "is-mirror REPOSITORY",
-		Short:             "Whether a repository is a mirror",
-		Args:              cobra.ExactArgs(1),
+		Use:               "mirror REPOSITORY [true|false]",
+		Short:             "Set or get a repository mirror property",
+		Args:              cobra.RangeArgs(1, 2),
 		PersistentPreRunE: checkIfReadable,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			be := backend.FromContext(ctx)
 			rn := args[0]
-			rr, err := be.Repository(ctx, rn)
-			if err != nil {
-				return err
+
+			switch len(args) {
+			case 1:
+				isMirror, err := be.IsMirror(ctx, rn)
+				if err != nil {
+					return err
+				}
+
+				cmd.Println(isMirror)
+			case 2:
+				if err := checkIfCollab(cmd, args); err != nil {
+					return err
+				}
+
+				isMirror := args[1] == "true"
+				if err := be.SetMirror(ctx, rn, isMirror); err != nil {
+					return err
+				}
 			}
 
-			isMirror := rr.IsMirror()
-			cmd.Println(isMirror)
 			return nil
 		},
 	}
